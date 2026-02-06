@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labo Chromatographie de la Neige</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #e1f5fe 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 6px 14px 8px;
+        }
+
+        header { text-align: center; padding: 2px 0 4px; flex-shrink: 0; }
+        header h1 { color: #1565C0; font-size: 1.3em; }
+        header p  { color: #5c7d8a; font-size: 0.78em; margin-top: 1px; }
+
+        .controls { text-align: center; padding: 3px 0 6px; flex-shrink: 0; }
+        .controls button {
+            background: #1976D2; color: white; border: none;
+            padding: 4px 13px; border-radius: 12px; font-size: 0.75em;
+            cursor: pointer; margin: 0 4px; transition: background 0.2s;
+        }
+        .controls button:hover { background: #1565C0; }
+
+        #app {
+            flex: 1; display: flex; flex-direction: column;
+            gap: 5px; min-height: 0;
+        }
+
+        .row {
+            flex: 1; display: flex; align-items: stretch;
+            background: #fff; border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            overflow: hidden; border: 2px solid transparent;
+            transition: border-color 0.2s; min-height: 0;
+        }
+        .row:hover { border-color: #90caf9; }
+
+        .sample-card {
+            width: 120px; min-width: 120px; padding: 4px 6px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; user-select: none;
+            border-right: 2px solid #f0f0f0; transition: filter 0.2s;
+        }
+        .sample-card:hover  { filter: brightness(0.94); }
+        .sample-card:active { transform: scale(0.97); }
+        .sample-card .emoji    { font-size: 1.4em; }
+        .sample-card .name     { font-weight: 700; font-size: 0.68em; text-align: center; color: #333; line-height: 1.15; margin-top: 1px; }
+        .sample-card .subtitle { font-size: 0.58em; color: #888; text-align: center; margin-top: 1px; font-style: italic; }
+
+        .graph-container {
+            flex: 1; position: relative; min-height: 0;
+            background: #e4e8eb; border-radius: 0 8px 8px 0;
+            cursor: pointer;
+        }
+        .graph-container canvas { display: block; width: 100%; height: 100%; }
+
+        .graph-hint {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); color: #a0aab0;
+            font-size: 0.78em; pointer-events: none;
+            animation: pulse 2s ease-in-out infinite;
+            transition: opacity 0.3s;
+        }
+        .graph-hint.hidden { opacity: 0; }
+        @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+        #tooltip {
+            position: fixed; background: rgba(25,25,25,0.92); color: #fff;
+            padding: 5px 10px; border-radius: 6px; font-size: 0.76em;
+            pointer-events: none; z-index: 100; white-space: nowrap;
+            transform: translate(-50%, calc(-100% - 12px));
+            line-height: 1.35; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            transition: opacity 0.15s;
+        }
+        #tooltip.hidden { opacity: 0; pointer-events: none; }
+        .tt-name  { font-weight: 700; font-size: 1.05em; }
+        .tt-value { color: #b0bec5; font-size: 0.92em; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Labo Chromatographie de la Neige</h1>
+        <p>Clique sur un &eacute;chantillon pour l'analyser &mdash; survole les pics pour voir les d&eacute;tails</p>
+    </header>
+    <div class="controls">
+        <button onclick="analyzeAll()">Tout analyser</button>
+        <button onclick="resetAll()">R&eacute;initialiser</button>
+    </div>
+    <div id="app"></div>
+    <div id="tooltip" class="hidden"></div>
+
+    <script>
+    /* =============================================================
+       CONFIGURATION  —  edit peaks, units, and samples here
+       ============================================================= */
+    const CONFIG = {
+        xAxis: { label: "Temps de r\u00e9tention", unit: "min", min: 0, max: 10, ticks: 10 },
+        yAxis: { label: "Intensit\u00e9",         unit: "mAU", min: 0, max: 120 },
+
+        animationDuration: 3500,
+        noiseLevel: 0.025,
+        numPoints:  800,
+    };
+
+    /*  Chaque pic :  { position, height, width, label }
+     *    position – valeur sur l'axe x    height – max sur l'axe y
+     *    width    – sigma gaussien        label  – nom de la mol\u00e9cule (affich\u00e9 au survol)
+     */
+    const SAMPLES = [
+        {
+            name: "Neige fra\u00eeche de montagne",
+            subtitle: "Contr\u00f4le / R\u00e9f\u00e9rence",
+            emoji: "\u{1F3D4}\u{FE0F}",
+            color: "#42A5F5",
+            cardBg: "#E3F2FD",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+            ],
+        },
+        {
+            name: "Site un",
+            subtitle: "\u00c9chantillon n\u00b01",
+            emoji: "\u{1F697}",
+            color: "#FF9800",
+            cardBg: "#FFF3E0",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+                { position: 5.0, height: 35, width: 0.16, label: "Suie" },
+                { position: 7.3, height: 13, width: 0.20, label: "Huile" },
+            ],
+        },
+        {
+            name: "Site deux",
+            subtitle: "\u00c9chantillon n\u00b02",
+            emoji: "\u{1F3D9}\u{FE0F}",
+            color: "#66BB6A",
+            cardBg: "#E8F5E9",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+                { position: 5.0, height: 26, width: 0.16, label: "Suie" },
+                { position: 7.3, height: 13, width: 0.20, label: "Huile" },
+            ],
+        },
+        {
+            name: "Site trois",
+            subtitle: "\u00c9chantillon n\u00b03",
+            emoji: "\u{1F3ED}",
+            color: "#EF5350",
+            cardBg: "#FFEBEE",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+                { position: 5.0, height: 26, width: 0.16, label: "Suie" },
+                { position: 7.3, height: 13, width: 0.20, label: "Huile" },
+            ],
+        },
+    ];
+    /* ============================================================= */
+
+    const MARGIN = { top: 8, right: 12, bottom: 26, left: 44 };
+    const canvases = [], displays = [], states = [];
+    const tooltip = document.getElementById("tooltip");
+
+    /* ---- noise -------------------------------------------------- */
+    function smoothNoise(n, controlPts, amplitude) {
+        const rng = Array.from({ length: controlPts + 1 }, () => (Math.random() - 0.5) * 2 * amplitude);
+        const out = new Array(n);
+        for (let i = 0; i < n; i++) {
+            const t = (i / n) * controlPts, idx = Math.floor(t), f = t - idx;
+            const s = f * f * (3 - 2 * f);
+            out[i] = rng[idx] * (1 - s) + rng[Math.min(idx + 1, controlPts)] * s;
+        }
+        return out;
+    }
+
+    /* ---- signal ------------------------------------------------- */
+    function generateSignal(sample) {
+        const N = CONFIG.numPoints, xMin = CONFIG.xAxis.min, xRange = CONFIG.xAxis.max - xMin;
+        const amp = CONFIG.noiseLevel * CONFIG.yAxis.max;
+        const slow = smoothNoise(N, 15, amp * 0.6), fast = smoothNoise(N, 180, amp * 0.4);
+        const sig = new Array(N);
+        for (let i = 0; i < N; i++) {
+            const x = xMin + (i / N) * xRange;
+            let y = slow[i] + fast[i];
+            for (const pk of sample.peaks) y += pk.height * Math.exp(-((x - pk.position) ** 2) / (2 * pk.width ** 2));
+            sig[i] = y;
+        }
+        return sig;
+    }
+
+    /* ---- canvas helpers ----------------------------------------- */
+    function setupCanvas(index) {
+        const canvas = canvases[index];
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        displays[index] = { w: rect.width, h: rect.height, dpr };
+    }
+
+    function getCtx(index) {
+        const ctx = canvases[index].getContext("2d");
+        ctx.setTransform(displays[index].dpr, 0, 0, displays[index].dpr, 0, 0);
+        return ctx;
+    }
+
+    function pb(index) {
+        const { w, h } = displays[index];
+        return { w, h, L: MARGIN.left, R: w - MARGIN.right, T: MARGIN.top, B: h - MARGIN.bottom };
+    }
+
+    /* ---- drawing: y-axis (always visible) ----------------------- */
+    function drawYAxis(ctx, b) {
+        ctx.strokeStyle = "#999"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(b.L, b.T); ctx.lineTo(b.L, b.B); ctx.stroke();
+        ctx.save();
+        ctx.fillStyle = "#888"; ctx.font = "10px sans-serif";
+        ctx.translate(11, (b.T + b.B) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(CONFIG.yAxis.label + " (" + CONFIG.yAxis.unit + ")", 0, 0);
+        ctx.restore();
+    }
+
+    /* ---- main render (seismograph: pen LEFT, paper scrolls RIGHT) */
+    /*  The paper strip slides from left to right.  At f=0 it is     *
+     *  entirely off-screen left; at f=1 it reaches its standard     *
+     *  position.  The pen is FIXED at b.L.  Grid, labels and trace  *
+     *  all travel with the paper.                                   */
+    function renderSample(index) {
+        const ctx = getCtx(index);
+        const b   = pb(index);
+        const st  = states[index];
+        const sample = SAMPLES[index];
+        const plotW = b.R - b.L, plotH = b.B - b.T;
+
+        ctx.fillStyle = "#e4e8eb";
+        ctx.fillRect(0, 0, b.w, b.h);
+        drawYAxis(ctx, b);
+
+        if (!st.signal || st.revealFraction <= 0) return;
+
+        const f   = st.revealFraction;
+        const N   = st.signal.length;
+
+        // paperOff = screen-x of data-point 0.
+        // f=0  → L-plotW  (off-screen left)     f=1 → L  (standard)
+        const paperOff = b.L - (1 - f) * plotW;
+        // right edge of visible paper
+        const visRight = Math.min(b.R, b.L + f * plotW);
+        // data index currently under the pen (at b.L)
+        const penIdx = Math.min(Math.round((1 - f) * (N - 1)), N - 1);
+
+        // --- white paper ---
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(b.L, b.T, visRight - b.L, plotH);
+
+        // --- clip to visible paper ---
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(b.L, b.T - 1, visRight - b.L + 1, plotH + 2);
+        ctx.clip();
+
+        // vertical grid lines (scroll with paper)
+        var xAxis = CONFIG.xAxis;
+        ctx.strokeStyle = "#e2e6e9"; ctx.lineWidth = 0.7;
+        for (var gi = 0; gi <= xAxis.ticks; gi++) {
+            var gx = paperOff + (gi / xAxis.ticks) * plotW;
+            if (gx < b.L - 1 || gx > visRight + 1) continue;
+            ctx.beginPath(); ctx.moveTo(gx, b.T); ctx.lineTo(gx, b.B); ctx.stroke();
+        }
+        for (var gi = 0; gi <= 4; gi++) {
+            var gy = b.T + (gi / 4) * plotH;
+            ctx.beginPath(); ctx.moveTo(b.L, gy); ctx.lineTo(visRight, gy); ctx.stroke();
+        }
+
+        // x-axis line
+        ctx.strokeStyle = "#999"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(b.L, b.B); ctx.lineTo(visRight, b.B); ctx.stroke();
+
+        // x tick labels (scroll with paper)
+        ctx.fillStyle = "#777"; ctx.font = "10px sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "top";
+        for (var ti = 0; ti <= xAxis.ticks; ti++) {
+            var tx = paperOff + (ti / xAxis.ticks) * plotW;
+            if (tx < b.L - 8 || tx > visRight + 8) continue;
+            ctx.fillText((xAxis.min + (ti / xAxis.ticks) * (xAxis.max - xAxis.min)).toFixed(0), tx, b.B + 2);
+        }
+        if (visRight - b.L > 100) {
+            ctx.fillText(xAxis.label + " (" + xAxis.unit + ")", (b.L + visRight) / 2, b.B + 13);
+        }
+
+        // --- signal fill ---
+        ctx.fillStyle = sample.color + "1a";
+        ctx.beginPath();
+        var started = false;
+        for (var si = 0; si < N; si++) {
+            var sx = paperOff + (si / (N - 1)) * plotW;
+            if (sx > visRight + 1) break;
+            if (sx < b.L - 1) continue;
+            var sy = b.B - (Math.max(0, st.signal[si]) / CONFIG.yAxis.max) * plotH;
+            if (!started) { ctx.moveTo(sx, b.B); ctx.lineTo(sx, sy); started = true; }
+            else ctx.lineTo(sx, sy);
+        }
+        if (started) { ctx.lineTo(sx, b.B); ctx.closePath(); ctx.fill(); }
+
+        // --- signal line ---
+        ctx.strokeStyle = sample.color; ctx.lineWidth = 1.8; ctx.lineJoin = "round";
+        ctx.beginPath();
+        started = false;
+        for (var si = 0; si < N; si++) {
+            var sx = paperOff + (si / (N - 1)) * plotW;
+            if (sx > visRight + 1) break;
+            if (sx < b.L - 1) continue;
+            var sy = b.B - (Math.max(0, st.signal[si]) / CONFIG.yAxis.max) * plotH;
+            if (!started) { ctx.moveTo(sx, sy); started = true; }
+            else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+
+        ctx.restore(); // end clip
+
+        // --- paper right-edge (advancing edge) ---
+        if (visRight < b.R - 2) {
+            var eg = ctx.createLinearGradient(visRight, 0, visRight + 5, 0);
+            eg.addColorStop(0, "rgba(0,0,0,0.06)"); eg.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = eg; ctx.fillRect(visRight, b.T, 5, plotH);
+            ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 0.8;
+            ctx.beginPath(); ctx.moveTo(visRight, b.T); ctx.lineTo(visRight, b.B); ctx.stroke();
+        }
+
+        // --- fixed pen at LEFT edge ---
+        if (f > 0.005 && f < 1) {
+            var penY = b.B - (Math.max(0, st.signal[penIdx]) / CONFIG.yAxis.max) * plotH;
+            ctx.beginPath(); ctx.arc(b.L, penY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = sample.color + "30"; ctx.fill();
+            ctx.beginPath(); ctx.arc(b.L, penY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = sample.color; ctx.fill();
+            ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+
+        // --- hover highlight ---
+        if (st.hoveredPeak) {
+            var pk = st.hoveredPeak;
+            var xFrac = (pk.position - CONFIG.xAxis.min) / (CONFIG.xAxis.max - CONFIG.xAxis.min);
+            var hx = paperOff + xFrac * plotW;
+            if (hx >= b.L && hx <= visRight) {
+                var hy = b.B - (pk.height / CONFIG.yAxis.max) * plotH;
+                ctx.strokeStyle = sample.color + "55"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+                ctx.beginPath(); ctx.moveTo(hx, b.B); ctx.lineTo(hx, hy); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+                ctx.fillStyle = sample.color; ctx.fill();
+                ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+            }
+        }
+    }
+
+    /* ---- animation ---------------------------------------------- */
+    function startAnimation(index) {
+        var st = states[index];
+        if (st.animating) return;
+        st.signal = generateSignal(SAMPLES[index]);
+        st.revealFraction = 0;
+        st.animating = true;
+        st.startTime = performance.now();
+        st.hoveredPeak = null;
+        document.getElementById("hint-" + index).classList.add("hidden");
+
+        function frame(now) {
+            st.revealFraction = Math.min((now - st.startTime) / CONFIG.animationDuration, 1);
+            renderSample(index);
+            if (st.revealFraction < 1) st.rafId = requestAnimationFrame(frame);
+            else st.animating = false;
+        }
+        st.rafId = requestAnimationFrame(frame);
+    }
+
+    function resetSample(index) {
+        var st = states[index];
+        if (st.rafId) cancelAnimationFrame(st.rafId);
+        st.animating = false; st.signal = null;
+        st.revealFraction = 0; st.hoveredPeak = null;
+        renderSample(index);
+        document.getElementById("hint-" + index).classList.remove("hidden");
+    }
+
+    function handleClick(i) { resetSample(i); setTimeout(function() { startAnimation(i); }, 50); }
+    function analyzeAll()   { SAMPLES.forEach(function(_, i) { resetSample(i); setTimeout(function() { startAnimation(i); }, i * 500); }); }
+    function resetAll()     { SAMPLES.forEach(function(_, i) { resetSample(i); }); tooltip.className = "hidden"; }
+
+    /* ---- hover / tooltip ---------------------------------------- */
+    function setupHover(index) {
+        var canvas = canvases[index];
+
+        canvas.addEventListener("mousemove", function(e) {
+            var st = states[index];
+            if (!st.signal) return;
+
+            var rect = canvas.getBoundingClientRect();
+            var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+            var b = pb(index);
+            var plotW = b.R - b.L, plotH = b.B - b.T;
+            var f = st.revealFraction;
+            var paperOff = b.L - (1 - f) * plotW;
+            var visRight = Math.min(b.R, b.L + f * plotW);
+
+            var best = null, bestDist = 22;
+            for (var pi = 0; pi < SAMPLES[index].peaks.length; pi++) {
+                var pk = SAMPLES[index].peaks[pi];
+                var xFrac = (pk.position - CONFIG.xAxis.min) / (CONFIG.xAxis.max - CONFIG.xAxis.min);
+                var px = paperOff + xFrac * plotW;
+                if (px < b.L || px > visRight) continue;
+                var py = b.B - (pk.height / CONFIG.yAxis.max) * plotH;
+                var d = Math.hypot(mx - px, my - py);
+                if (d < bestDist) { bestDist = d; best = pk; }
+            }
+
+            var changed = st.hoveredPeak !== best;
+            st.hoveredPeak = best;
+
+            if (best) {
+                tooltip.className = "";
+                tooltip.innerHTML =
+                    '<div class="tt-name">' + best.label + '</div>' +
+                    '<div class="tt-value">' + best.height + " " + CONFIG.yAxis.unit +
+                    " @ " + best.position + " " + CONFIG.xAxis.unit + '</div>';
+                tooltip.style.left = e.clientX + "px";
+                tooltip.style.top  = e.clientY + "px";
+            } else {
+                tooltip.className = "hidden";
+            }
+            if (changed && !st.animating) renderSample(index);
+        });
+
+        canvas.addEventListener("mouseleave", function() {
+            var st = states[index];
+            if (st.hoveredPeak) {
+                st.hoveredPeak = null;
+                tooltip.className = "hidden";
+                if (!st.animating) renderSample(index);
+            }
+        });
+    }
+
+    /* ---- build UI ----------------------------------------------- */
+    var app = document.getElementById("app");
+    SAMPLES.forEach(function(sample, i) {
+        states.push({ signal: null, revealFraction: 0, animating: false, rafId: null, startTime: 0, hoveredPeak: null });
+        var row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML =
+            '<div class="sample-card" style="background:' + sample.cardBg + '" onclick="handleClick(' + i + ')">' +
+                '<div class="emoji">' + sample.emoji + '</div>' +
+                '<div class="name">' + sample.name + '</div>' +
+                '<div class="subtitle">' + sample.subtitle + '</div>' +
+            '</div>' +
+            '<div class="graph-container" onclick="handleClick(' + i + ')">' +
+                '<canvas id="canvas-' + i + '"></canvas>' +
+                '<div class="graph-hint" id="hint-' + i + '">Cliquer pour analyser</div>' +
+            '</div>';
+        app.appendChild(row);
+        canvases.push(document.getElementById("canvas-" + i));
+    });
+
+    /* ---- init --------------------------------------------------- */
+    function initAll() { SAMPLES.forEach(function(_, i) { setupCanvas(i); renderSample(i); }); }
+    window.addEventListener("load", function() { initAll(); SAMPLES.forEach(function(_, i) { setupHover(i); }); });
+    window.addEventListener("resize", initAll);
+    </script>
+</body>
+</html>
