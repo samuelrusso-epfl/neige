@@ -4,6 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Labo Chromatographie de la Neige</title>
+
+    <!--  ============================================================
+          CONFIGURATION — Modifier les données ici
+          ============================================================ -->
+    <script>
+    var CONFIG = {
+        xAxis:  { label: "Temps de retention", unit: "min", min: 0, max: 10, ticks: 10 },
+        yAxis:  { label: "Intensitée",          unit: "mAU", min: 0, max: 120 },
+        animationDuration: 35000,
+        noiseLevel: 0.025,
+        numPoints:  800
+    };
+
+    var SAMPLES = [
+        /* --- R\u00e9f\u00e9rence (neige pure) --- */
+        {
+            name:     "Neige fraîche de montagne",
+            subtitle: "Contrôle / Référence",
+            code:     "REF",
+            color:    "#42A5F5",
+            cardBg:   "#E3F2FD",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" }
+            ]
+        },
+        /* --- Site 1 --- */
+        {
+            name:     "Site 1",
+            subtitle: "Echantillon n\u00b01",
+            code:     "S1",
+            location: "Bord de route",
+            color:    "#FF9800",
+            cardBg:   "#FFF3E0",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+                { position: 3.1, height: 82, width: 0.18, label: "NaCl" },
+                { position: 5.0, height: 35, width: 0.16, label: "Suie" },
+                { position: 7.3, height: 13, width: 0.20, label: "Huile" }
+            ]
+        },
+        /* --- Site 2 --- */
+        {
+            name:     "Site 2",
+            subtitle: "Echantillon n\u00b02",
+            code:     "S2",
+            location: "Centre-ville",
+            color:    "#66BB6A",
+            cardBg:   "#E8F5E9",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+                { position: 5.0, height: 26, width: 0.16, label: "Suie" },
+                { position: 7.3, height: 13, width: 0.20, label: "Huile" }
+            ]
+        },
+        /* --- Site 3 --- */
+        {
+            name:     "Site 3",
+            subtitle: "Echantillon n\u00b03",
+            code:     "S3",
+            location: "Zone industrielle",
+            color:    "#EF5350",
+            cardBg:   "#FFEBEE",
+            peaks: [
+                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+                { position: 5.0, height: 26, width: 0.16, label: "Suie" },
+                { position: 7.3, height: 13, width: 0.20, label: "Huile" }
+            ]
+        }
+    ];
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -45,28 +117,17 @@
         }
         .map-container svg { display: block; width: 100%; height: auto; }
 
-        .zone-cards {
-            position: absolute; bottom: 12px; left: 50%;
-            transform: translateX(-50%);
-            display: flex; gap: 12px; z-index: 10;
+        .zone-area { cursor: pointer; }
+        .zone-fill {
+            transition: fill-opacity 0.3s ease, stroke-opacity 0.3s ease;
+            stroke-width: 2; stroke-opacity: 0;
         }
-        .zone-card {
-            --c: #999;
-            background: #ffffffee; border: 1px solid #c8cdd4;
-            border-left: 4px solid var(--c);
-            border-radius: 5px; padding: 10px 18px;
-            text-align: center; cursor: pointer; min-width: 140px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .zone-area:hover .zone-fill {
+            fill-opacity: 0.3;
+            stroke-opacity: 0.5;
         }
-        .zone-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
-        }
-        .zc-name { font-weight: 600; font-size: 0.85em; color: #2c3e50; margin-top: 1px; }
-        .zc-id {
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.66em; color: #8895a4; margin-top: 2px;
-        }
+        .zone-label-bg { transition: opacity 0.3s; opacity: 0.65; }
+        .zone-area:hover .zone-label-bg { opacity: 0.95; }
 
         /* =============== PAGE 2 =============== */
         #page2 { padding: 6px 14px 8px; }
@@ -183,42 +244,40 @@
             </defs>
             <rect width="800" height="400" fill="url(#skyGrad)"/>
 
-            <!-- Far mountains -->
-            <polygon points="0,280 80,140 180,240 260,120 370,230 440,160 520,220 600,100 700,210 800,180 800,280" fill="#a8b5bf" opacity="0.4"/>
+            <!-- Mountain body -->
+            <polygon points="40,355 120,260 200,220 300,140 400,60 500,140 600,220 680,260 760,355"
+                     fill="#8a9baa" opacity="0.5"/>
+            <!-- Far ridge (depth) -->
+            <path d="M0,355 Q100,310 200,280 Q300,230 400,120 Q500,230 600,280 Q700,310 800,355"
+                  fill="#7a8b99" opacity="0.2"/>
 
-            <!-- Near mountains -->
-            <polygon points="0,320 100,180 200,260 310,140 420,250 500,170 580,240 680,130 780,220 800,280 800,320" fill="#8494a3" opacity="0.5"/>
+            <!-- Snow on peak -->
+            <polygon points="375,88 400,60 425,88" fill="#fff" opacity="0.8"/>
+            <polygon points="358,112 400,60 442,112" fill="#fff" opacity="0.3"/>
 
-            <!-- Snow caps -->
-            <polygon points="310,140 293,170 327,170" fill="#fff" opacity="0.75"/>
-            <polygon points="680,130 663,160 697,160" fill="#fff" opacity="0.75"/>
-            <polygon points="100,180 85,206 115,206" fill="#fff" opacity="0.65"/>
-            <polygon points="500,170 487,195 513,195" fill="#fff" opacity="0.65"/>
+            <!-- Contour lines -->
+            <path d="M100,300 Q250,240 400,200 Q550,240 700,300" fill="none" stroke="#6b7c8d" stroke-width="0.4" opacity="0.2"/>
+            <path d="M160,270 Q280,210 400,168 Q520,210 640,270" fill="none" stroke="#6b7c8d" stroke-width="0.4" opacity="0.18"/>
+            <path d="M220,242 Q310,185 400,140 Q490,185 580,242" fill="none" stroke="#6b7c8d" stroke-width="0.4" opacity="0.15"/>
 
-            <!-- Ground -->
-            <rect y="315" width="800" height="85" fill="#dde3e8" opacity="0.7"/>
-            <!-- Snow patches -->
-            <ellipse cx="150" cy="345" rx="55" ry="10" fill="#fff" opacity="0.45"/>
-            <ellipse cx="500" cy="355" rx="70" ry="9" fill="#fff" opacity="0.4"/>
-            <ellipse cx="700" cy="340" rx="45" ry="7" fill="#fff" opacity="0.45"/>
-            <ellipse cx="320" cy="368" rx="40" ry="6" fill="#fff" opacity="0.35"/>
+            <!-- Ground / valley -->
+            <rect x="0" y="350" width="800" height="50" fill="#dde3e8" opacity="0.8"/>
+            <ellipse cx="160" cy="362" rx="50" ry="5" fill="#fff" opacity="0.25"/>
+            <ellipse cx="400" cy="365" rx="60" ry="5" fill="#fff" opacity="0.2"/>
+            <ellipse cx="650" cy="360" rx="45" ry="5" fill="#fff" opacity="0.25"/>
 
             <!-- Trees -->
-            <g fill="#7a9a7e" opacity="0.35">
-                <polygon points="60,318 68,290 76,318"/>
-                <polygon points="730,312 738,284 746,312"/>
-                <polygon points="230,322 237,298 244,322"/>
-                <polygon points="580,316 587,290 594,316"/>
+            <g fill="#7a9a7e" opacity="0.22">
+                <polygon points="68,345 74,326 80,345"/>
+                <polygon points="92,342 97,327 102,342"/>
+                <polygon points="700,343 706,324 712,343"/>
+                <polygon points="726,340 731,326 736,340"/>
+                <polygon points="238,348 243,336 248,348"/>
+                <polygon points="558,346 563,334 568,346"/>
             </g>
 
-            <!-- Reference label -->
-            <text x="326" y="115" font-size="9" fill="#4a6785"
-                  font-family="Consolas, monospace" text-anchor="middle" opacity="0.65">
-                R&#233;f. &#8212; Neige pure
-            </text>
-
-            <!-- Subtle grid overlay -->
-            <g stroke="#9aa8b4" stroke-width="0.3" opacity="0.18">
+            <!-- Grid overlay -->
+            <g stroke="#9aa8b4" stroke-width="0.3" opacity="0.1">
                 <line x1="0" y1="100" x2="800" y2="100"/>
                 <line x1="0" y1="200" x2="800" y2="200"/>
                 <line x1="0" y1="300" x2="800" y2="300"/>
@@ -228,29 +287,66 @@
             </g>
 
             <!-- Snow particles -->
-            <g fill="#fff" opacity="0.4">
-                <circle cx="50"  cy="40"  r="2"/><circle cx="180" cy="70"  r="1.5"/>
-                <circle cx="300" cy="30"  r="2.5"/><circle cx="420" cy="55"  r="1.5"/>
-                <circle cx="550" cy="25"  r="2"/><circle cx="650" cy="65"  r="1.5"/>
-                <circle cx="750" cy="35"  r="2"/><circle cx="120" cy="95"  r="1.5"/>
-                <circle cx="480" cy="85"  r="1.5"/><circle cx="370" cy="100" r="1.5"/>
-                <circle cx="620" cy="45"  r="1.5"/><circle cx="90"  cy="110" r="1.5"/>
+            <g fill="#fff" opacity="0.3">
+                <circle cx="55" cy="38" r="1.5"/><circle cx="180" cy="62" r="1.5"/>
+                <circle cx="310" cy="28" r="2"/><circle cx="430" cy="48" r="1.5"/>
+                <circle cx="560" cy="22" r="1.5"/><circle cx="660" cy="58" r="1.5"/>
+                <circle cx="740" cy="32" r="1.5"/><circle cx="125" cy="88" r="1.5"/>
             </g>
+
+            <!-- ===== ZONE 1: Left slope — Bord de route ===== -->
+            <g class="zone-area" onclick="selectSite(1)">
+                <polygon class="zone-fill" points="40,355 120,260 200,220 280,156 280,355"
+                         fill="#E67E22" fill-opacity="0.08" stroke="#E67E22"/>
+                <!-- Ski run -->
+                <path d="M258,172 C228,228 188,288 128,345" fill="none"
+                      stroke="#fff" stroke-width="1.8" stroke-dasharray="8,5" opacity="0.4"/>
+                <!-- Label -->
+                <rect class="zone-label-bg" x="110" y="268" width="90" height="34" rx="3" fill="#fff"/>
+                <text id="zname1" x="155" y="282" text-anchor="middle" font-family="Consolas,monospace"
+                      font-size="11" font-weight="700" fill="#2c3e50"></text>
+                <text id="zloc1" x="155" y="295" text-anchor="middle" font-family="Consolas,monospace"
+                      font-size="7.5" fill="#6b7c8d"></text>
+            </g>
+
+            <!-- ===== ZONE 2: Center slope — Centre-ville ===== -->
+            <g class="zone-area" onclick="selectSite(2)">
+                <polygon class="zone-fill" points="280,156 300,140 400,60 500,140 520,156 520,355 280,355"
+                         fill="#27AE60" fill-opacity="0.08" stroke="#27AE60"/>
+                <!-- Ski run -->
+                <path d="M400,78 C396,180 398,270 400,345" fill="none"
+                      stroke="#fff" stroke-width="1.8" stroke-dasharray="8,5" opacity="0.4"/>
+                <!-- Label -->
+                <rect class="zone-label-bg" x="352" y="230" width="96" height="34" rx="3" fill="#fff"/>
+                <text id="zname2" x="400" y="244" text-anchor="middle" font-family="Consolas,monospace"
+                      font-size="11" font-weight="700" fill="#2c3e50"></text>
+                <text id="zloc2" x="400" y="257" text-anchor="middle" font-family="Consolas,monospace"
+                      font-size="7.5" fill="#6b7c8d"></text>
+            </g>
+
+            <!-- ===== ZONE 3: Right slope — Zone industrielle ===== -->
+            <g class="zone-area" onclick="selectSite(3)">
+                <polygon class="zone-fill" points="520,156 600,220 680,260 760,355 520,355"
+                         fill="#C0392B" fill-opacity="0.08" stroke="#C0392B"/>
+                <!-- Ski run -->
+                <path d="M542,172 C572,228 612,288 672,345" fill="none"
+                      stroke="#fff" stroke-width="1.8" stroke-dasharray="8,5" opacity="0.4"/>
+                <!-- Label -->
+                <rect class="zone-label-bg" x="572" y="268" width="112" height="34" rx="3" fill="#fff"/>
+                <text id="zname3" x="628" y="282" text-anchor="middle" font-family="Consolas,monospace"
+                      font-size="11" font-weight="700" fill="#2c3e50"></text>
+                <text id="zloc3" x="628" y="295" text-anchor="middle" font-family="Consolas,monospace"
+                      font-size="7.5" fill="#6b7c8d"></text>
+            </g>
+
+            <!-- Zone dividers -->
+            <line x1="280" y1="156" x2="280" y2="355" stroke="#5a6a78" stroke-width="0.5" stroke-dasharray="4,3" opacity="0.2"/>
+            <line x1="520" y1="156" x2="520" y2="355" stroke="#5a6a78" stroke-width="0.5" stroke-dasharray="4,3" opacity="0.2"/>
+
+            <!-- Reference label at peak -->
+            <text x="400" y="48" text-anchor="middle" font-family="Consolas,monospace"
+                  font-size="9" fill="#4a6785" font-weight="600" opacity="0.6">R&#233;f. &#8212; Neige pure</text>
         </svg>
-        <div class="zone-cards">
-            <div class="zone-card" style="--c:#E67E22" onclick="selectSite(1)">
-                <div class="zc-name">Site 1</div>
-                <div class="zc-id">Bord de route</div>
-            </div>
-            <div class="zone-card" style="--c:#27AE60" onclick="selectSite(2)">
-                <div class="zc-name">Site 2</div>
-                <div class="zc-id">Centre-ville</div>
-            </div>
-            <div class="zone-card" style="--c:#C0392B" onclick="selectSite(3)">
-                <div class="zc-name">Site 3</div>
-                <div class="zc-id">Zone industrielle</div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -287,69 +383,6 @@
 <div id="tooltip" class="hidden"></div>
 
 <script>
-/* =============================================================
-   CONFIGURATION
-   ============================================================= */
-var CONFIG = {
-    xAxis: { label: "Temps de r\u00e9tention", unit: "min", min: 0, max: 10, ticks: 10 },
-    yAxis: { label: "Intensit\u00e9", unit: "mAU", min: 0, max: 120 },
-    animationDuration: 35000,
-    noiseLevel: 0.025,
-    numPoints: 800
-};
-
-var SAMPLES = [
-    {
-        name: "Neige fra\u00eeche de montagne",
-        subtitle: "Contr\u00f4le / R\u00e9f\u00e9rence",
-        code: "R\u00c9F",
-        color: "#42A5F5",
-        cardBg: "#E3F2FD",
-        peaks: [
-            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" }
-        ]
-    },
-    {
-        name: "Site un",
-        subtitle: "\u00c9chantillon n\u00b01",
-        code: "S1",
-        color: "#FF9800",
-        cardBg: "#FFF3E0",
-        peaks: [
-            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-            { position: 3.1, height: 82, width: 0.18, label: "NaCl" },
-            { position: 5.0, height: 35, width: 0.16, label: "Suie" },
-            { position: 7.3, height: 13, width: 0.20, label: "Huile" }
-        ]
-    },
-    {
-        name: "Site deux",
-        subtitle: "\u00c9chantillon n\u00b02",
-        code: "S2",
-        color: "#66BB6A",
-        cardBg: "#E8F5E9",
-        peaks: [
-            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-            { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
-            { position: 5.0, height: 26, width: 0.16, label: "Suie" },
-            { position: 7.3, height: 13, width: 0.20, label: "Huile" }
-        ]
-    },
-    {
-        name: "Site trois",
-        subtitle: "\u00c9chantillon n\u00b03",
-        code: "S3",
-        color: "#EF5350",
-        cardBg: "#FFEBEE",
-        peaks: [
-            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-            { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
-            { position: 5.0, height: 26, width: 0.16, label: "Suie" },
-            { position: 7.3, height: 13, width: 0.20, label: "Huile" }
-        ]
-    }
-];
-
 /* ============================================================= */
 
 var MARGIN = { top: 8, right: 12, bottom: 26, left: 44 };
@@ -736,6 +769,10 @@ function handleResize() {
 /* ---- init --------------------------------------------------- */
 window.addEventListener("load", function() {
     setupGraphEvents();
+    for (var i = 1; i <= 3; i++) {
+        document.getElementById("zname" + i).textContent = SAMPLES[i].name;
+        document.getElementById("zloc" + i).textContent = SAMPLES[i].location;
+    }
     showPage(1);
 });
 window.addEventListener("resize", handleResize);
