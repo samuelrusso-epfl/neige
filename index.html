@@ -8,426 +8,697 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #e1f5fe 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #eef0f4;
             height: 100vh;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            padding: 6px 14px 8px;
         }
 
-        header { text-align: center; padding: 2px 0 4px; flex-shrink: 0; }
-        header h1 { color: #1565C0; font-size: 1.3em; }
-        header p  { color: #5c7d8a; font-size: 0.78em; margin-top: 1px; }
-
-        .controls { text-align: center; padding: 3px 0 6px; flex-shrink: 0; }
-        .controls button {
-            background: #1976D2; color: white; border: none;
-            padding: 4px 13px; border-radius: 12px; font-size: 0.75em;
-            cursor: pointer; margin: 0 4px; transition: background 0.2s;
+        /* ---- Page system ---- */
+        .page {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
-        .controls button:hover { background: #1565C0; }
+        .page.hidden {
+            opacity: 0; pointer-events: none; transform: translateY(12px);
+        }
+
+        /* =============== PAGE 1 =============== */
+        #page1 {
+            align-items: center; justify-content: center; padding: 14px;
+        }
+        .p1-title {
+            color: #2c3e50; font-size: 1.45em; font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        .p1-sub {
+            color: #6b7c8d; font-size: 0.82em; margin: 5px 0 14px;
+            text-align: center;
+        }
+
+        .map-container {
+            position: relative; width: 100%; max-width: 860px;
+            border-radius: 6px; overflow: hidden;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.1);
+            border: 1px solid #c8cdd4;
+        }
+        .map-container svg { display: block; width: 100%; height: auto; }
+
+        .zone-cards {
+            position: absolute; bottom: 12px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 12px; z-index: 10;
+        }
+        .zone-card {
+            --c: #999;
+            background: #ffffffee; border: 1px solid #c8cdd4;
+            border-left: 4px solid var(--c);
+            border-radius: 5px; padding: 10px 18px;
+            text-align: center; cursor: pointer; min-width: 140px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .zone-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+        }
+        .zc-name { font-weight: 600; font-size: 0.85em; color: #2c3e50; margin-top: 1px; }
+        .zc-id {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.66em; color: #8895a4; margin-top: 2px;
+        }
+
+        /* =============== PAGE 2 =============== */
+        #page2 { padding: 6px 14px 8px; }
+
+        .p2-header {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; padding: 2px 0;
+        }
+        .p2-header h1 {
+            color: #2c3e50; font-size: 1.1em; font-weight: 600;
+            flex: 1; text-align: center;
+        }
+        .p2-btn {
+            background: #4a6785; color: white; border: none;
+            padding: 5px 14px; border-radius: 4px; font-size: 0.75em;
+            cursor: pointer; transition: background 0.2s;
+            letter-spacing: 0.01em;
+        }
+        .p2-btn:hover { background: #3a5470; }
+        .p2-btn.primary { background: #2979FF; }
+        .p2-btn.primary:hover { background: #2062cc; }
+
+        .controls {
+            display: flex; justify-content: center; gap: 8px;
+            padding: 2px 0 5px; flex-shrink: 0;
+        }
+        .p2-sub {
+            text-align: center; color: #8895a4; font-size: 0.7em;
+            padding: 0 0 4px; flex-shrink: 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
 
         #app {
             flex: 1; display: flex; flex-direction: column;
-            gap: 5px; min-height: 0;
+            gap: 4px; min-height: 0;
         }
 
         .row {
             flex: 1; display: flex; align-items: stretch;
-            background: #fff; border-radius: 10px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-            overflow: hidden; border: 2px solid transparent;
+            background: #fff; border-radius: 5px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            overflow: hidden; border: 1px solid #d4d8de;
             transition: border-color 0.2s; min-height: 0;
         }
-        .row:hover { border-color: #90caf9; }
+        .row:hover { border-color: #a0b4c8; }
 
         .sample-card {
-            width: 120px; min-width: 120px; padding: 4px 6px;
+            width: 115px; min-width: 115px; padding: 4px 6px;
             display: flex; flex-direction: column; align-items: center;
             justify-content: center; cursor: pointer; user-select: none;
-            border-right: 2px solid #f0f0f0; transition: filter 0.2s;
+            border-right: 1px solid #e4e7eb; transition: background 0.15s;
         }
-        .sample-card:hover  { filter: brightness(0.94); }
+        .sample-card:hover { background: #f6f7f9; }
         .sample-card:active { transform: scale(0.97); }
-        .sample-card .emoji    { font-size: 1.4em; }
-        .sample-card .name     { font-weight: 700; font-size: 0.68em; text-align: center; color: #333; line-height: 1.15; margin-top: 1px; }
-        .sample-card .subtitle { font-size: 0.58em; color: #888; text-align: center; margin-top: 1px; font-style: italic; }
+        .sample-card .code {
+            font-family: 'Consolas', monospace; font-size: 0.6em;
+            font-weight: 700; color: #fff; padding: 2px 7px;
+            border-radius: 3px; letter-spacing: 0.03em;
+        }
+        .sample-card .name {
+            font-weight: 600; font-size: 0.65em; text-align: center;
+            color: #2c3e50; line-height: 1.15; margin-top: 2px;
+        }
+        .sample-card .subtitle {
+            font-family: 'Consolas', monospace; font-size: 0.54em;
+            color: #8895a4; text-align: center; margin-top: 1px;
+        }
 
-        .graph-container {
+        .graph-area {
             flex: 1; position: relative; min-height: 0;
-            background: #e4e8eb; border-radius: 0 8px 8px 0;
+            background: #f5f6f9; border-radius: 0 4px 4px 0;
             cursor: pointer;
         }
-        .graph-container canvas { display: block; width: 100%; height: 100%; }
+        .graph-area canvas { display: block; width: 100%; height: 100%; }
 
         .graph-hint {
             position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); color: #a0aab0;
-            font-size: 0.78em; pointer-events: none;
-            animation: pulse 2s ease-in-out infinite;
+            transform: translate(-50%, -50%); color: #99a3ad;
+            font-size: 0.72em; pointer-events: none;
+            font-family: 'Consolas', monospace;
+            animation: pulse 2.5s ease-in-out infinite;
             transition: opacity 0.3s;
         }
         .graph-hint.hidden { opacity: 0; }
-        @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.8; } }
 
         #tooltip {
-            position: fixed; background: rgba(25,25,25,0.92); color: #fff;
-            padding: 5px 10px; border-radius: 6px; font-size: 0.76em;
+            position: fixed; background: rgba(30,36,44,0.94); color: #fff;
+            padding: 5px 10px; border-radius: 4px; font-size: 0.74em;
             pointer-events: none; z-index: 100; white-space: nowrap;
-            transform: translate(-50%, calc(-100% - 12px));
-            line-height: 1.35; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-            transition: opacity 0.15s;
+            transform: translate(-50%, calc(-100% - 10px));
+            line-height: 1.3; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: opacity 0.12s;
+            font-family: 'Consolas', monospace;
         }
         #tooltip.hidden { opacity: 0; pointer-events: none; }
-        .tt-name  { font-weight: 700; font-size: 1.05em; }
-        .tt-value { color: #b0bec5; font-size: 0.92em; }
+        .tt-name { font-weight: 700; font-size: 1.05em; font-family: 'Segoe UI', sans-serif; }
+        .tt-value { color: #a0b4c8; font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Labo Chromatographie de la Neige</h1>
-        <p>Clique sur un &eacute;chantillon pour l'analyser &mdash; survole les pics pour voir les d&eacute;tails</p>
-    </header>
-    <div class="controls">
-        <button onclick="analyzeAll()">Tout analyser</button>
-        <button onclick="resetAll()">R&eacute;initialiser</button>
+
+<!-- ============== PAGE 1 ============== -->
+<div class="page" id="page1">
+    <h1 class="p1-title">Chromatographie de la Neige</h1>
+    <p class="p1-sub">S&eacute;lectionnez un site de pr&eacute;l&egrave;vement &agrave; comparer avec l'&eacute;chantillon de r&eacute;f&eacute;rence</p>
+    <div class="map-container">
+        <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#cddae5"/>
+                    <stop offset="100%" stop-color="#e2e8ee"/>
+                </linearGradient>
+            </defs>
+            <rect width="800" height="400" fill="url(#skyGrad)"/>
+
+            <!-- Far mountains -->
+            <polygon points="0,280 80,140 180,240 260,120 370,230 440,160 520,220 600,100 700,210 800,180 800,280" fill="#a8b5bf" opacity="0.4"/>
+
+            <!-- Near mountains -->
+            <polygon points="0,320 100,180 200,260 310,140 420,250 500,170 580,240 680,130 780,220 800,280 800,320" fill="#8494a3" opacity="0.5"/>
+
+            <!-- Snow caps -->
+            <polygon points="310,140 293,170 327,170" fill="#fff" opacity="0.75"/>
+            <polygon points="680,130 663,160 697,160" fill="#fff" opacity="0.75"/>
+            <polygon points="100,180 85,206 115,206" fill="#fff" opacity="0.65"/>
+            <polygon points="500,170 487,195 513,195" fill="#fff" opacity="0.65"/>
+
+            <!-- Ground -->
+            <rect y="315" width="800" height="85" fill="#dde3e8" opacity="0.7"/>
+            <!-- Snow patches -->
+            <ellipse cx="150" cy="345" rx="55" ry="10" fill="#fff" opacity="0.45"/>
+            <ellipse cx="500" cy="355" rx="70" ry="9" fill="#fff" opacity="0.4"/>
+            <ellipse cx="700" cy="340" rx="45" ry="7" fill="#fff" opacity="0.45"/>
+            <ellipse cx="320" cy="368" rx="40" ry="6" fill="#fff" opacity="0.35"/>
+
+            <!-- Trees -->
+            <g fill="#7a9a7e" opacity="0.35">
+                <polygon points="60,318 68,290 76,318"/>
+                <polygon points="730,312 738,284 746,312"/>
+                <polygon points="230,322 237,298 244,322"/>
+                <polygon points="580,316 587,290 594,316"/>
+            </g>
+
+            <!-- Reference label -->
+            <text x="326" y="115" font-size="9" fill="#4a6785"
+                  font-family="Consolas, monospace" text-anchor="middle" opacity="0.65">
+                R&#233;f. &#8212; Neige pure
+            </text>
+
+            <!-- Subtle grid overlay -->
+            <g stroke="#9aa8b4" stroke-width="0.3" opacity="0.18">
+                <line x1="0" y1="100" x2="800" y2="100"/>
+                <line x1="0" y1="200" x2="800" y2="200"/>
+                <line x1="0" y1="300" x2="800" y2="300"/>
+                <line x1="200" y1="0" x2="200" y2="400"/>
+                <line x1="400" y1="0" x2="400" y2="400"/>
+                <line x1="600" y1="0" x2="600" y2="400"/>
+            </g>
+
+            <!-- Snow particles -->
+            <g fill="#fff" opacity="0.4">
+                <circle cx="50"  cy="40"  r="2"/><circle cx="180" cy="70"  r="1.5"/>
+                <circle cx="300" cy="30"  r="2.5"/><circle cx="420" cy="55"  r="1.5"/>
+                <circle cx="550" cy="25"  r="2"/><circle cx="650" cy="65"  r="1.5"/>
+                <circle cx="750" cy="35"  r="2"/><circle cx="120" cy="95"  r="1.5"/>
+                <circle cx="480" cy="85"  r="1.5"/><circle cx="370" cy="100" r="1.5"/>
+                <circle cx="620" cy="45"  r="1.5"/><circle cx="90"  cy="110" r="1.5"/>
+            </g>
+        </svg>
+        <div class="zone-cards">
+            <div class="zone-card" style="--c:#E67E22" onclick="selectSite(1)">
+                <div class="zc-name">Site 1</div>
+                <div class="zc-id">Bord de route</div>
+            </div>
+            <div class="zone-card" style="--c:#27AE60" onclick="selectSite(2)">
+                <div class="zc-name">Site 2</div>
+                <div class="zc-id">Centre-ville</div>
+            </div>
+            <div class="zone-card" style="--c:#C0392B" onclick="selectSite(3)">
+                <div class="zc-name">Site 3</div>
+                <div class="zc-id">Zone industrielle</div>
+            </div>
+        </div>
     </div>
-    <div id="app"></div>
-    <div id="tooltip" class="hidden"></div>
+</div>
 
-    <script>
-    /* =============================================================
-       CONFIGURATION  —  edit peaks, units, and samples here
-       ============================================================= */
-    const CONFIG = {
-        xAxis: { label: "Temps de r\u00e9tention", unit: "min", min: 0, max: 10, ticks: 10 },
-        yAxis: { label: "Intensit\u00e9",         unit: "mAU", min: 0, max: 120 },
+<!-- ============== PAGE 2 ============== -->
+<div class="page hidden" id="page2">
+    <div class="p2-header">
+        <button class="p2-btn" onclick="goBack()">&#8592; Retour</button>
+        <h1 id="p2Title">Analyse comparative</h1>
+        <span style="width:76px"></span>
+    </div>
+    <p class="p2-sub" id="p2Sub"></p>
+    <div class="controls">
+        <button class="p2-btn primary" onclick="analyzeBoth()">Analyser</button>
+        <button class="p2-btn" onclick="resetBoth()">R&eacute;initialiser</button>
+    </div>
+    <div id="app">
+        <div class="row">
+            <div class="sample-card" id="card0" onclick="analyzeBoth()"></div>
+            <div class="graph-area" id="graphArea0" onclick="analyzeBoth()">
+                <canvas id="canvas0"></canvas>
+                <div class="graph-hint" id="hint0">Cliquer pour analyser</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="sample-card" id="card1" onclick="analyzeBoth()"></div>
+            <div class="graph-area" id="graphArea1" onclick="analyzeBoth()">
+                <canvas id="canvas1"></canvas>
+                <div class="graph-hint" id="hint1">Cliquer pour analyser</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        animationDuration: 3500,
-        noiseLevel: 0.025,
-        numPoints:  800,
-    };
+<div id="tooltip" class="hidden"></div>
 
-    /*  Chaque pic :  { position, height, width, label }
-     *    position – valeur sur l'axe x    height – max sur l'axe y
-     *    width    – sigma gaussien        label  – nom de la mol\u00e9cule (affich\u00e9 au survol)
-     */
-    const SAMPLES = [
-        {
-            name: "Neige fra\u00eeche de montagne",
-            subtitle: "Contr\u00f4le / R\u00e9f\u00e9rence",
-            emoji: "\u{1F3D4}\u{FE0F}",
-            color: "#42A5F5",
-            cardBg: "#E3F2FD",
-            peaks: [
-                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-            ],
-        },
-        {
-            name: "Site un",
-            subtitle: "\u00c9chantillon n\u00b01",
-            emoji: "\u{1F697}",
-            color: "#FF9800",
-            cardBg: "#FFF3E0",
-            peaks: [
-                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
-                { position: 5.0, height: 35, width: 0.16, label: "Suie" },
-                { position: 7.3, height: 13, width: 0.20, label: "Huile" },
-            ],
-        },
-        {
-            name: "Site deux",
-            subtitle: "\u00c9chantillon n\u00b02",
-            emoji: "\u{1F3D9}\u{FE0F}",
-            color: "#66BB6A",
-            cardBg: "#E8F5E9",
-            peaks: [
-                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
-                { position: 5.0, height: 26, width: 0.16, label: "Suie" },
-                { position: 7.3, height: 13, width: 0.20, label: "Huile" },
-            ],
-        },
-        {
-            name: "Site trois",
-            subtitle: "\u00c9chantillon n\u00b03",
-            emoji: "\u{1F3ED}",
-            color: "#EF5350",
-            cardBg: "#FFEBEE",
-            peaks: [
-                { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
-                { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
-                { position: 5.0, height: 26, width: 0.16, label: "Suie" },
-                { position: 7.3, height: 13, width: 0.20, label: "Huile" },
-            ],
-        },
-    ];
-    /* ============================================================= */
+<script>
+/* =============================================================
+   CONFIGURATION
+   ============================================================= */
+var CONFIG = {
+    xAxis: { label: "Temps de r\u00e9tention", unit: "min", min: 0, max: 10, ticks: 10 },
+    yAxis: { label: "Intensit\u00e9", unit: "mAU", min: 0, max: 120 },
+    animationDuration: 35000,
+    noiseLevel: 0.025,
+    numPoints: 800
+};
 
-    const MARGIN = { top: 8, right: 12, bottom: 26, left: 44 };
-    const canvases = [], displays = [], states = [];
-    const tooltip = document.getElementById("tooltip");
+var SAMPLES = [
+    {
+        name: "Neige fra\u00eeche de montagne",
+        subtitle: "Contr\u00f4le / R\u00e9f\u00e9rence",
+        code: "R\u00c9F",
+        color: "#42A5F5",
+        cardBg: "#E3F2FD",
+        peaks: [
+            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" }
+        ]
+    },
+    {
+        name: "Site un",
+        subtitle: "\u00c9chantillon n\u00b01",
+        code: "S1",
+        color: "#FF9800",
+        cardBg: "#FFF3E0",
+        peaks: [
+            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+            { position: 3.1, height: 82, width: 0.18, label: "NaCl" },
+            { position: 5.0, height: 35, width: 0.16, label: "Suie" },
+            { position: 7.3, height: 13, width: 0.20, label: "Huile" }
+        ]
+    },
+    {
+        name: "Site deux",
+        subtitle: "\u00c9chantillon n\u00b02",
+        code: "S2",
+        color: "#66BB6A",
+        cardBg: "#E8F5E9",
+        peaks: [
+            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+            { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+            { position: 5.0, height: 26, width: 0.16, label: "Suie" },
+            { position: 7.3, height: 13, width: 0.20, label: "Huile" }
+        ]
+    },
+    {
+        name: "Site trois",
+        subtitle: "\u00c9chantillon n\u00b03",
+        code: "S3",
+        color: "#EF5350",
+        cardBg: "#FFEBEE",
+        peaks: [
+            { position: 1.4, height: 14, width: 0.12, label: "H\u2082O" },
+            { position: 3.1, height: 42, width: 0.18, label: "NaCl" },
+            { position: 5.0, height: 26, width: 0.16, label: "Suie" },
+            { position: 7.3, height: 13, width: 0.20, label: "Huile" }
+        ]
+    }
+];
 
-    /* ---- noise -------------------------------------------------- */
-    function smoothNoise(n, controlPts, amplitude) {
-        const rng = Array.from({ length: controlPts + 1 }, () => (Math.random() - 0.5) * 2 * amplitude);
-        const out = new Array(n);
-        for (let i = 0; i < n; i++) {
-            const t = (i / n) * controlPts, idx = Math.floor(t), f = t - idx;
-            const s = f * f * (3 - 2 * f);
-            out[i] = rng[idx] * (1 - s) + rng[Math.min(idx + 1, controlPts)] * s;
+/* ============================================================= */
+
+var MARGIN = { top: 8, right: 12, bottom: 26, left: 44 };
+var tooltip = document.getElementById("tooltip");
+
+var selectedSiteIndex = 1;
+var revealFrac = 0;
+var animRafId = null;
+var animating = false;
+
+var rows = [
+    { sample: null, canvas: null, display: null, signal: null, hoveredPeak: null },
+    { sample: null, canvas: null, display: null, signal: null, hoveredPeak: null }
+];
+
+/* ---- noise -------------------------------------------------- */
+function smoothNoise(n, cp, amp) {
+    var rng = Array.from({ length: cp + 1 }, function() { return (Math.random() - 0.5) * 2 * amp; });
+    var out = new Array(n);
+    for (var i = 0; i < n; i++) {
+        var t = (i / n) * cp, idx = Math.floor(t), f = t - idx, s = f * f * (3 - 2 * f);
+        out[i] = rng[idx] * (1 - s) + rng[Math.min(idx + 1, cp)] * s;
+    }
+    return out;
+}
+
+/* ---- signal ------------------------------------------------- */
+function genSignal(sample) {
+    var N = CONFIG.numPoints, xMin = CONFIG.xAxis.min, xR = CONFIG.xAxis.max - xMin;
+    var amp = CONFIG.noiseLevel * CONFIG.yAxis.max;
+    var sl = smoothNoise(N, 15, amp * 0.6), fa = smoothNoise(N, 180, amp * 0.4);
+    var sig = new Array(N);
+    for (var i = 0; i < N; i++) {
+        var x = xMin + (i / N) * xR;
+        var y = sl[i] + fa[i];
+        for (var p = 0; p < sample.peaks.length; p++) {
+            var pk = sample.peaks[p];
+            y += pk.height * Math.exp(-((x - pk.position) * (x - pk.position)) / (2 * pk.width * pk.width));
         }
-        return out;
+        sig[i] = y;
+    }
+    return sig;
+}
+
+/* ---- canvas helpers ----------------------------------------- */
+function setupCanvas(rowIdx) {
+    var row = rows[rowIdx];
+    var rect = row.canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    row.canvas.width = Math.round(rect.width * dpr);
+    row.canvas.height = Math.round(rect.height * dpr);
+    row.display = { w: rect.width, h: rect.height, dpr: dpr };
+}
+
+function getCtx(rowIdx) {
+    var row = rows[rowIdx];
+    var c = row.canvas.getContext("2d");
+    c.setTransform(row.display.dpr, 0, 0, row.display.dpr, 0, 0);
+    return c;
+}
+
+function pb(rowIdx) {
+    var d = rows[rowIdx].display;
+    return { w: d.w, h: d.h, L: MARGIN.left, R: d.w - MARGIN.right, T: MARGIN.top, B: d.h - MARGIN.bottom };
+}
+
+/* ---- drawing: y-axis ---------------------------------------- */
+function drawYAxis(c, b) {
+    c.strokeStyle = "#8a949e"; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(b.L, b.T); c.lineTo(b.L, b.B); c.stroke();
+    c.save();
+    c.fillStyle = "#6b7c8d"; c.font = "9px Consolas, Monaco, monospace";
+    c.translate(12, (b.T + b.B) / 2);
+    c.rotate(-Math.PI / 2);
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText(CONFIG.yAxis.label + " (" + CONFIG.yAxis.unit + ")", 0, 0);
+    c.restore();
+}
+
+/* ---- main render -------------------------------------------- */
+function renderRow(rowIdx) {
+    var row = rows[rowIdx];
+    if (!row.canvas || !row.display) return;
+
+    var c = getCtx(rowIdx);
+    var b = pb(rowIdx);
+    var sample = row.sample;
+    var plotW = b.R - b.L, plotH = b.B - b.T;
+
+    c.fillStyle = "#f5f6f9";
+    c.fillRect(0, 0, b.w, b.h);
+    drawYAxis(c, b);
+
+    if (!row.signal || revealFrac <= 0) return;
+
+    var f = revealFrac;
+    var N = row.signal.length;
+    var paperOff = b.L - (1 - f) * plotW;
+    var visRight = Math.min(b.R, b.L + f * plotW);
+    var penIdx = Math.min(Math.round((1 - f) * (N - 1)), N - 1);
+
+    /* white paper */
+    c.fillStyle = "#ffffff";
+    c.fillRect(b.L, b.T, visRight - b.L, plotH);
+
+    /* clip */
+    c.save();
+    c.beginPath(); c.rect(b.L, b.T - 1, visRight - b.L + 1, plotH + 2); c.clip();
+
+    /* vertical grid */
+    var xAxis = CONFIG.xAxis;
+    c.strokeStyle = "#e4e7ea"; c.lineWidth = 0.6;
+    for (var gi = 0; gi <= xAxis.ticks; gi++) {
+        var gx = paperOff + (gi / xAxis.ticks) * plotW;
+        if (gx < b.L - 1 || gx > visRight + 1) continue;
+        c.beginPath(); c.moveTo(gx, b.T); c.lineTo(gx, b.B); c.stroke();
+    }
+    /* horizontal grid */
+    for (var hi = 0; hi <= 4; hi++) {
+        var gy = b.T + (hi / 4) * plotH;
+        c.beginPath(); c.moveTo(b.L, gy); c.lineTo(visRight, gy); c.stroke();
     }
 
-    /* ---- signal ------------------------------------------------- */
-    function generateSignal(sample) {
-        const N = CONFIG.numPoints, xMin = CONFIG.xAxis.min, xRange = CONFIG.xAxis.max - xMin;
-        const amp = CONFIG.noiseLevel * CONFIG.yAxis.max;
-        const slow = smoothNoise(N, 15, amp * 0.6), fast = smoothNoise(N, 180, amp * 0.4);
-        const sig = new Array(N);
-        for (let i = 0; i < N; i++) {
-            const x = xMin + (i / N) * xRange;
-            let y = slow[i] + fast[i];
-            for (const pk of sample.peaks) y += pk.height * Math.exp(-((x - pk.position) ** 2) / (2 * pk.width ** 2));
-            sig[i] = y;
-        }
-        return sig;
+    /* x-axis line */
+    c.strokeStyle = "#8a949e"; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(b.L, b.B); c.lineTo(visRight, b.B); c.stroke();
+
+    /* x tick labels */
+    c.fillStyle = "#6b7c8d"; c.font = "9px Consolas, Monaco, monospace";
+    c.textAlign = "center"; c.textBaseline = "top";
+    for (var ti = 0; ti <= xAxis.ticks; ti++) {
+        var tx = paperOff + (ti / xAxis.ticks) * plotW;
+        if (tx < b.L - 8 || tx > visRight + 8) continue;
+        c.fillText((xAxis.min + (ti / xAxis.ticks) * (xAxis.max - xAxis.min)).toFixed(0), tx, b.B + 2);
+    }
+    if (visRight - b.L > 100) {
+        c.fillText(xAxis.label + " (" + xAxis.unit + ")", (b.L + visRight) / 2, b.B + 13);
     }
 
-    /* ---- canvas helpers ----------------------------------------- */
-    function setupCanvas(index) {
-        const canvas = canvases[index];
-        const rect = canvas.parentElement.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = Math.round(rect.width * dpr);
-        canvas.height = Math.round(rect.height * dpr);
-        displays[index] = { w: rect.width, h: rect.height, dpr };
+    /* signal fill */
+    c.fillStyle = sample.color + "18";
+    c.beginPath();
+    var started = false, lastSx = b.L;
+    for (var si = 0; si < N; si++) {
+        var sx = paperOff + (si / (N - 1)) * plotW;
+        if (sx > visRight + 1) break;
+        if (sx < b.L - 1) continue;
+        var sy = b.B - (Math.max(0, row.signal[si]) / CONFIG.yAxis.max) * plotH;
+        if (!started) { c.moveTo(sx, b.B); c.lineTo(sx, sy); started = true; }
+        else c.lineTo(sx, sy);
+        lastSx = sx;
+    }
+    if (started) { c.lineTo(lastSx, b.B); c.closePath(); c.fill(); }
+
+    /* signal line */
+    c.strokeStyle = sample.color; c.lineWidth = 1.6; c.lineJoin = "round";
+    c.beginPath(); started = false;
+    for (var si = 0; si < N; si++) {
+        var sx = paperOff + (si / (N - 1)) * plotW;
+        if (sx > visRight + 1) break;
+        if (sx < b.L - 1) continue;
+        var sy = b.B - (Math.max(0, row.signal[si]) / CONFIG.yAxis.max) * plotH;
+        if (!started) { c.moveTo(sx, sy); started = true; }
+        else c.lineTo(sx, sy);
+    }
+    c.stroke();
+    c.restore(); /* end clip */
+
+    /* paper edge shadow */
+    if (visRight < b.R - 2) {
+        var eg = c.createLinearGradient(visRight, 0, visRight + 4, 0);
+        eg.addColorStop(0, "rgba(0,0,0,0.05)"); eg.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = eg; c.fillRect(visRight, b.T, 4, plotH);
+        c.strokeStyle = "rgba(0,0,0,0.08)"; c.lineWidth = 0.7;
+        c.beginPath(); c.moveTo(visRight, b.T); c.lineTo(visRight, b.B); c.stroke();
     }
 
-    function getCtx(index) {
-        const ctx = canvases[index].getContext("2d");
-        ctx.setTransform(displays[index].dpr, 0, 0, displays[index].dpr, 0, 0);
-        return ctx;
+    /* pen dot */
+    if (f > 0.005 && f < 1) {
+        var penY = b.B - (Math.max(0, row.signal[penIdx]) / CONFIG.yAxis.max) * plotH;
+        c.beginPath(); c.arc(b.L, penY, 5, 0, Math.PI * 2);
+        c.fillStyle = sample.color + "28"; c.fill();
+        c.beginPath(); c.arc(b.L, penY, 2.5, 0, Math.PI * 2);
+        c.fillStyle = sample.color; c.fill();
+        c.strokeStyle = "#fff"; c.lineWidth = 1.2; c.stroke();
     }
 
-    function pb(index) {
-        const { w, h } = displays[index];
-        return { w, h, L: MARGIN.left, R: w - MARGIN.right, T: MARGIN.top, B: h - MARGIN.bottom };
-    }
-
-    /* ---- drawing: y-axis (always visible) ----------------------- */
-    function drawYAxis(ctx, b) {
-        ctx.strokeStyle = "#999"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(b.L, b.T); ctx.lineTo(b.L, b.B); ctx.stroke();
-        ctx.save();
-        ctx.fillStyle = "#888"; ctx.font = "10px sans-serif";
-        ctx.translate(11, (b.T + b.B) / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(CONFIG.yAxis.label + " (" + CONFIG.yAxis.unit + ")", 0, 0);
-        ctx.restore();
-    }
-
-    /* ---- main render (seismograph: pen LEFT, paper scrolls RIGHT) */
-    /*  The paper strip slides from left to right.  At f=0 it is     *
-     *  entirely off-screen left; at f=1 it reaches its standard     *
-     *  position.  The pen is FIXED at b.L.  Grid, labels and trace  *
-     *  all travel with the paper.                                   */
-    function renderSample(index) {
-        const ctx = getCtx(index);
-        const b   = pb(index);
-        const st  = states[index];
-        const sample = SAMPLES[index];
-        const plotW = b.R - b.L, plotH = b.B - b.T;
-
-        ctx.fillStyle = "#e4e8eb";
-        ctx.fillRect(0, 0, b.w, b.h);
-        drawYAxis(ctx, b);
-
-        if (!st.signal || st.revealFraction <= 0) return;
-
-        const f   = st.revealFraction;
-        const N   = st.signal.length;
-
-        // paperOff = screen-x of data-point 0.
-        // f=0  → L-plotW  (off-screen left)     f=1 → L  (standard)
-        const paperOff = b.L - (1 - f) * plotW;
-        // right edge of visible paper
-        const visRight = Math.min(b.R, b.L + f * plotW);
-        // data index currently under the pen (at b.L)
-        const penIdx = Math.min(Math.round((1 - f) * (N - 1)), N - 1);
-
-        // --- white paper ---
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(b.L, b.T, visRight - b.L, plotH);
-
-        // --- clip to visible paper ---
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(b.L, b.T - 1, visRight - b.L + 1, plotH + 2);
-        ctx.clip();
-
-        // vertical grid lines (scroll with paper)
-        var xAxis = CONFIG.xAxis;
-        ctx.strokeStyle = "#e2e6e9"; ctx.lineWidth = 0.7;
-        for (var gi = 0; gi <= xAxis.ticks; gi++) {
-            var gx = paperOff + (gi / xAxis.ticks) * plotW;
-            if (gx < b.L - 1 || gx > visRight + 1) continue;
-            ctx.beginPath(); ctx.moveTo(gx, b.T); ctx.lineTo(gx, b.B); ctx.stroke();
-        }
-        for (var gi = 0; gi <= 4; gi++) {
-            var gy = b.T + (gi / 4) * plotH;
-            ctx.beginPath(); ctx.moveTo(b.L, gy); ctx.lineTo(visRight, gy); ctx.stroke();
-        }
-
-        // x-axis line
-        ctx.strokeStyle = "#999"; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(b.L, b.B); ctx.lineTo(visRight, b.B); ctx.stroke();
-
-        // x tick labels (scroll with paper)
-        ctx.fillStyle = "#777"; ctx.font = "10px sans-serif";
-        ctx.textAlign = "center"; ctx.textBaseline = "top";
-        for (var ti = 0; ti <= xAxis.ticks; ti++) {
-            var tx = paperOff + (ti / xAxis.ticks) * plotW;
-            if (tx < b.L - 8 || tx > visRight + 8) continue;
-            ctx.fillText((xAxis.min + (ti / xAxis.ticks) * (xAxis.max - xAxis.min)).toFixed(0), tx, b.B + 2);
-        }
-        if (visRight - b.L > 100) {
-            ctx.fillText(xAxis.label + " (" + xAxis.unit + ")", (b.L + visRight) / 2, b.B + 13);
-        }
-
-        // --- signal fill ---
-        ctx.fillStyle = sample.color + "1a";
-        ctx.beginPath();
-        var started = false;
-        for (var si = 0; si < N; si++) {
-            var sx = paperOff + (si / (N - 1)) * plotW;
-            if (sx > visRight + 1) break;
-            if (sx < b.L - 1) continue;
-            var sy = b.B - (Math.max(0, st.signal[si]) / CONFIG.yAxis.max) * plotH;
-            if (!started) { ctx.moveTo(sx, b.B); ctx.lineTo(sx, sy); started = true; }
-            else ctx.lineTo(sx, sy);
-        }
-        if (started) { ctx.lineTo(sx, b.B); ctx.closePath(); ctx.fill(); }
-
-        // --- signal line ---
-        ctx.strokeStyle = sample.color; ctx.lineWidth = 1.8; ctx.lineJoin = "round";
-        ctx.beginPath();
-        started = false;
-        for (var si = 0; si < N; si++) {
-            var sx = paperOff + (si / (N - 1)) * plotW;
-            if (sx > visRight + 1) break;
-            if (sx < b.L - 1) continue;
-            var sy = b.B - (Math.max(0, st.signal[si]) / CONFIG.yAxis.max) * plotH;
-            if (!started) { ctx.moveTo(sx, sy); started = true; }
-            else ctx.lineTo(sx, sy);
-        }
-        ctx.stroke();
-
-        ctx.restore(); // end clip
-
-        // --- paper right-edge (advancing edge) ---
-        if (visRight < b.R - 2) {
-            var eg = ctx.createLinearGradient(visRight, 0, visRight + 5, 0);
-            eg.addColorStop(0, "rgba(0,0,0,0.06)"); eg.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.fillStyle = eg; ctx.fillRect(visRight, b.T, 5, plotH);
-            ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 0.8;
-            ctx.beginPath(); ctx.moveTo(visRight, b.T); ctx.lineTo(visRight, b.B); ctx.stroke();
-        }
-
-        // --- fixed pen at LEFT edge ---
-        if (f > 0.005 && f < 1) {
-            var penY = b.B - (Math.max(0, st.signal[penIdx]) / CONFIG.yAxis.max) * plotH;
-            ctx.beginPath(); ctx.arc(b.L, penY, 6, 0, Math.PI * 2);
-            ctx.fillStyle = sample.color + "30"; ctx.fill();
-            ctx.beginPath(); ctx.arc(b.L, penY, 3, 0, Math.PI * 2);
-            ctx.fillStyle = sample.color; ctx.fill();
-            ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
-        }
-
-        // --- hover highlight ---
-        if (st.hoveredPeak) {
-            var pk = st.hoveredPeak;
-            var xFrac = (pk.position - CONFIG.xAxis.min) / (CONFIG.xAxis.max - CONFIG.xAxis.min);
-            var hx = paperOff + xFrac * plotW;
-            if (hx >= b.L && hx <= visRight) {
-                var hy = b.B - (pk.height / CONFIG.yAxis.max) * plotH;
-                ctx.strokeStyle = sample.color + "55"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-                ctx.beginPath(); ctx.moveTo(hx, b.B); ctx.lineTo(hx, hy); ctx.stroke();
-                ctx.setLineDash([]);
-                ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2);
-                ctx.fillStyle = sample.color; ctx.fill();
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
-            }
+    /* hover highlight */
+    if (row.hoveredPeak) {
+        var pk = row.hoveredPeak;
+        var xFrac = (pk.position - CONFIG.xAxis.min) / (CONFIG.xAxis.max - CONFIG.xAxis.min);
+        var hx = paperOff + xFrac * plotW;
+        if (hx >= b.L && hx <= visRight) {
+            var hy = b.B - (pk.height / CONFIG.yAxis.max) * plotH;
+            c.strokeStyle = sample.color + "55"; c.lineWidth = 1; c.setLineDash([3, 3]);
+            c.beginPath(); c.moveTo(hx, b.B); c.lineTo(hx, hy); c.stroke();
+            c.setLineDash([]);
+            c.beginPath(); c.arc(hx, hy, 4, 0, Math.PI * 2);
+            c.fillStyle = sample.color; c.fill();
+            c.strokeStyle = "#fff"; c.lineWidth = 1.5; c.stroke();
         }
     }
+}
 
-    /* ---- animation ---------------------------------------------- */
-    function startAnimation(index) {
-        var st = states[index];
-        if (st.animating) return;
-        st.signal = generateSignal(SAMPLES[index]);
-        st.revealFraction = 0;
-        st.animating = true;
-        st.startTime = performance.now();
-        st.hoveredPeak = null;
-        document.getElementById("hint-" + index).classList.add("hidden");
+function renderAll() { renderRow(0); renderRow(1); }
 
-        function frame(now) {
-            st.revealFraction = Math.min((now - st.startTime) / CONFIG.animationDuration, 1);
-            renderSample(index);
-            if (st.revealFraction < 1) st.rafId = requestAnimationFrame(frame);
-            else st.animating = false;
+/* ---- page transitions --------------------------------------- */
+var page1 = document.getElementById("page1");
+var page2 = document.getElementById("page2");
+
+function showPage(num) {
+    if (num === 1) { page2.classList.add("hidden"); page1.classList.remove("hidden"); }
+    else { page1.classList.add("hidden"); page2.classList.remove("hidden"); }
+}
+
+/* ---- site selection ----------------------------------------- */
+function selectSite(siteIdx) {
+    selectedSiteIndex = siteIdx;
+    var site = SAMPLES[siteIdx];
+
+    document.getElementById("p2Title").textContent = site.name + "  vs  R\u00e9f\u00e9rence";
+    document.getElementById("p2Sub").textContent =
+        "\u00c9ch. " + site.subtitle + " \u2014 Contr\u00f4le : " + SAMPLES[0].name;
+
+    rows[0].sample = SAMPLES[0];
+    rows[1].sample = SAMPLES[siteIdx];
+
+    var card0 = document.getElementById("card0");
+    card0.style.background = SAMPLES[0].cardBg;
+    card0.innerHTML =
+        '<div class="code" style="background:' + SAMPLES[0].color + '">' + SAMPLES[0].code + '</div>' +
+        '<div class="name">' + SAMPLES[0].name + '</div>' +
+        '<div class="subtitle">' + SAMPLES[0].subtitle + '</div>';
+
+    var card1 = document.getElementById("card1");
+    card1.style.background = site.cardBg;
+    card1.innerHTML =
+        '<div class="code" style="background:' + site.color + '">' + site.code + '</div>' +
+        '<div class="name">' + site.name + '</div>' +
+        '<div class="subtitle">' + site.subtitle + '</div>';
+
+    showPage(2);
+
+    setTimeout(function() {
+        if (animRafId) cancelAnimationFrame(animRafId);
+        animating = false;
+        revealFrac = 0;
+        rows[0].signal = null;
+        rows[1].signal = null;
+        rows[0].hoveredPeak = null;
+        rows[1].hoveredPeak = null;
+
+        rows[0].canvas = document.getElementById("canvas0");
+        rows[1].canvas = document.getElementById("canvas1");
+
+        setupCanvas(0);
+        setupCanvas(1);
+        renderAll();
+
+        document.getElementById("hint0").classList.remove("hidden");
+        document.getElementById("hint1").classList.remove("hidden");
+    }, 60);
+}
+
+function goBack() {
+    if (animRafId) cancelAnimationFrame(animRafId);
+    animating = false;
+    revealFrac = 0;
+    rows[0].hoveredPeak = null;
+    rows[1].hoveredPeak = null;
+    tooltip.className = "hidden";
+    showPage(1);
+}
+
+/* ---- animation (both rows simultaneously) ------------------- */
+function analyzeBoth() {
+    if (animating) return;
+
+    revealFrac = 0;
+    rows[0].signal = genSignal(rows[0].sample);
+    rows[1].signal = genSignal(rows[1].sample);
+    rows[0].hoveredPeak = null;
+    rows[1].hoveredPeak = null;
+    tooltip.className = "hidden";
+
+    document.getElementById("hint0").classList.add("hidden");
+    document.getElementById("hint1").classList.add("hidden");
+
+    animating = true;
+    var startTime = performance.now();
+
+    function frame(now) {
+        revealFrac = Math.min((now - startTime) / CONFIG.animationDuration, 1);
+        renderAll();
+        if (revealFrac < 1) {
+            animRafId = requestAnimationFrame(frame);
+        } else {
+            animating = false;
+            animRafId = null;
         }
-        st.rafId = requestAnimationFrame(frame);
     }
+    animRafId = requestAnimationFrame(frame);
+}
 
-    function resetSample(index) {
-        var st = states[index];
-        if (st.rafId) cancelAnimationFrame(st.rafId);
-        st.animating = false; st.signal = null;
-        st.revealFraction = 0; st.hoveredPeak = null;
-        renderSample(index);
-        document.getElementById("hint-" + index).classList.remove("hidden");
-    }
+function resetBoth() {
+    if (animRafId) cancelAnimationFrame(animRafId);
+    animating = false;
+    revealFrac = 0;
+    rows[0].signal = null;
+    rows[1].signal = null;
+    rows[0].hoveredPeak = null;
+    rows[1].hoveredPeak = null;
+    tooltip.className = "hidden";
 
-    function handleClick(i) { resetSample(i); setTimeout(function() { startAnimation(i); }, 50); }
-    function analyzeAll()   { SAMPLES.forEach(function(_, i) { resetSample(i); setTimeout(function() { startAnimation(i); }, i * 500); }); }
-    function resetAll()     { SAMPLES.forEach(function(_, i) { resetSample(i); }); tooltip.className = "hidden"; }
+    document.getElementById("hint0").classList.remove("hidden");
+    document.getElementById("hint1").classList.remove("hidden");
 
-    /* ---- hover / tooltip ---------------------------------------- */
-    function setupHover(index) {
-        var canvas = canvases[index];
+    renderAll();
+}
 
-        canvas.addEventListener("mousemove", function(e) {
-            var st = states[index];
-            if (!st.signal) return;
+/* ---- tooltip hover (no reveal control) ---------------------- */
+function setupGraphEvents() {
+    [0, 1].forEach(function(rowIdx) {
+        var ga = document.getElementById("graphArea" + rowIdx);
 
-            var rect = canvas.getBoundingClientRect();
+        ga.addEventListener("mousemove", function(e) {
+            var row = rows[rowIdx];
+            if (!row.signal || !row.display) return;
+
+            var rect = row.canvas.parentElement.getBoundingClientRect();
             var mx = e.clientX - rect.left, my = e.clientY - rect.top;
-            var b = pb(index);
+            var b = pb(rowIdx);
             var plotW = b.R - b.L, plotH = b.B - b.T;
-            var f = st.revealFraction;
-            var paperOff = b.L - (1 - f) * plotW;
-            var visRight = Math.min(b.R, b.L + f * plotW);
+            var paperOff = b.L - (1 - revealFrac) * plotW;
+            var visRight = Math.min(b.R, b.L + revealFrac * plotW);
 
             var best = null, bestDist = 22;
-            for (var pi = 0; pi < SAMPLES[index].peaks.length; pi++) {
-                var pk = SAMPLES[index].peaks[pi];
-                var xFrac = (pk.position - CONFIG.xAxis.min) / (CONFIG.xAxis.max - CONFIG.xAxis.min);
-                var px = paperOff + xFrac * plotW;
+            for (var pi = 0; pi < row.sample.peaks.length; pi++) {
+                var pk = row.sample.peaks[pi];
+                var xF = (pk.position - CONFIG.xAxis.min) / (CONFIG.xAxis.max - CONFIG.xAxis.min);
+                var px = paperOff + xF * plotW;
                 if (px < b.L || px > visRight) continue;
                 var py = b.B - (pk.height / CONFIG.yAxis.max) * plotH;
-                var d = Math.hypot(mx - px, my - py);
+                var d = Math.sqrt((mx - px) * (mx - px) + (my - py) * (my - py));
                 if (d < bestDist) { bestDist = d; best = pk; }
             }
 
-            var changed = st.hoveredPeak !== best;
-            st.hoveredPeak = best;
+            var changed = row.hoveredPeak !== best;
+            row.hoveredPeak = best;
 
             if (best) {
                 tooltip.className = "";
@@ -436,47 +707,38 @@
                     '<div class="tt-value">' + best.height + " " + CONFIG.yAxis.unit +
                     " @ " + best.position + " " + CONFIG.xAxis.unit + '</div>';
                 tooltip.style.left = e.clientX + "px";
-                tooltip.style.top  = e.clientY + "px";
+                tooltip.style.top = e.clientY + "px";
             } else {
                 tooltip.className = "hidden";
             }
-            if (changed && !st.animating) renderSample(index);
+            if (changed && !animating) renderAll();
         });
 
-        canvas.addEventListener("mouseleave", function() {
-            var st = states[index];
-            if (st.hoveredPeak) {
-                st.hoveredPeak = null;
+        ga.addEventListener("mouseleave", function() {
+            var row = rows[rowIdx];
+            if (row.hoveredPeak) {
+                row.hoveredPeak = null;
                 tooltip.className = "hidden";
-                if (!st.animating) renderSample(index);
+                if (!animating) renderAll();
             }
         });
-    }
-
-    /* ---- build UI ----------------------------------------------- */
-    var app = document.getElementById("app");
-    SAMPLES.forEach(function(sample, i) {
-        states.push({ signal: null, revealFraction: 0, animating: false, rafId: null, startTime: 0, hoveredPeak: null });
-        var row = document.createElement("div");
-        row.className = "row";
-        row.innerHTML =
-            '<div class="sample-card" style="background:' + sample.cardBg + '" onclick="handleClick(' + i + ')">' +
-                '<div class="emoji">' + sample.emoji + '</div>' +
-                '<div class="name">' + sample.name + '</div>' +
-                '<div class="subtitle">' + sample.subtitle + '</div>' +
-            '</div>' +
-            '<div class="graph-container" onclick="handleClick(' + i + ')">' +
-                '<canvas id="canvas-' + i + '"></canvas>' +
-                '<div class="graph-hint" id="hint-' + i + '">Cliquer pour analyser</div>' +
-            '</div>';
-        app.appendChild(row);
-        canvases.push(document.getElementById("canvas-" + i));
     });
+}
 
-    /* ---- init --------------------------------------------------- */
-    function initAll() { SAMPLES.forEach(function(_, i) { setupCanvas(i); renderSample(i); }); }
-    window.addEventListener("load", function() { initAll(); SAMPLES.forEach(function(_, i) { setupHover(i); }); });
-    window.addEventListener("resize", initAll);
-    </script>
+/* ---- resize ------------------------------------------------- */
+function handleResize() {
+    if (page2.classList.contains("hidden")) return;
+    if (rows[0].canvas && rows[0].display) {
+        setupCanvas(0); setupCanvas(1); renderAll();
+    }
+}
+
+/* ---- init --------------------------------------------------- */
+window.addEventListener("load", function() {
+    setupGraphEvents();
+    showPage(1);
+});
+window.addEventListener("resize", handleResize);
+</script>
 </body>
 </html>
